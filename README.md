@@ -77,6 +77,61 @@ python QR_Generator.py --url https://stasys.com.ua --print --paper-size medium
 
 > Gist містить тільки основний скрипт (`QR_Generator.py`). Встановники `install.bat`/`install.sh`, DEV-нотатки, README і історія — в репозиторії: https://github.com/alex94aiss-tech/qr-generator
 
+## Конфігурація (config.json)
+
+Скрипт підтримує конфігураційний файл `config.json` для типових налаштувань (за замовчуванням — для СТАСИС).
+
+### За замовчуванням (config.json)
+- **URL:** https://stasys.com.ua
+- **Caption:** "СТАСИС — ПрАТ Стабільні системи"
+- **Папір:** 100×100 мм (medium)
+- **Телефон:** +380****3815
+- **Email:** stasys94@ukr.net
+- **Wi-Fi:** STSIS (WPA, пароль порожній)
+
+### Використання конфігу
+```bash
+# Використати config.json (за замовчуванням, якщо файл існує)
+python QR_Generator.py --type url --print
+
+# Вказати інший файл конфігу
+python QR_Generator.py --config my_config.json --type tel --print
+
+# Ігнорувати конфіг і використовувати тільки аргументи
+python QR_Generator.py --no-config --type tel --phone +380****1234
+```
+
+### Перекриття конфігу аргументами
+Будь-який аргумент командного рядка перекриває відповідне поле в config.json:
+```bash
+# Конфіг каже URL: https://stasys.com.ua, але ми перезаписуємо
+python QR_Generator.py --url https://example.com --type url --print
+```
+
+### Структура config.json
+```json
+{
+  "defaults": {
+    "url": "https://stasys.com.ua",
+    "caption": "СТАСИС — ПрАТ Стабільні системи",
+    "paper_size": "medium",
+    "paper_mm": 100,
+    "error_correction": "M",
+    "border": 4,
+    "font_size": 28,
+    "caption_align": "center",
+    "caption_color": "black"
+  },
+  "types": {
+    "url": { "caption": "...", "url": "..." },
+    "tel": { "caption": "...", "phone": "+380..." },
+    "mailto": { "caption": "...", "email": "..." },
+    "wifi": { "caption": "...", "wifi_ssid": "...", "wifi_pass": "...", "wifi_sec": "WPA" },
+    "text": { "caption": "...", "text": "..." }
+  }
+}
+```
+
 ## Типи QR-кодів
 
 Скрипт підтримує 5 типів QR-кодів:
