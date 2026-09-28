@@ -124,3 +124,15 @@ python QR_Generator.py --url https://example.com --print
 ## Ліцензія
 
 MIT
+
+---
+
+## GitHub Gist (швидкий доступ до скрипта)
+
+Якщо потрібно швидко викачати тільки `QR_Generator.py` без всього репозиторію:
+
+🔗 https://gist.github.com/alex94aiss-tech/fa1c010144389eba70b38d4bd849e6b3
+
+Там же знаходиться оновлений скрипт — достатньо перейти за посиланням і натиснути **Raw** (або **Download**).
+
+> Повна версія з встановниками, документацією і DEV-нотатками — в репозиторії: https://github.com/alex94aiss-tech/qr-generator
