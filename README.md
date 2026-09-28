@@ -42,6 +42,41 @@ python3 -m pip install --user "qrcode[pil]"
 > sudo apt install python3-tk -y
 > ```
 
+## Встановлення з GitHub
+
+### Варіант 1 — однією командою (рекомендовано)
+```bash
+# Windows
+powershell -Command "Invoke-WebRequest -Uri https://raw.githubusercontent.com/alex94aiss-tech/qr-generator/main/install.bat -OutFile install.bat; install.bat"
+
+# Ubuntu / Linux
+curl -sL https://raw.githubusercontent.com/alex94aiss-tech/qr-generator/main/install.sh | bash
+```
+
+### Варіант 2 — через git (повна версія з документацією)
+```bash
+git clone https://github.com/alex94aiss-tech/qr-generator.git
+cd qr-generator
+# Windows:
+install.bat
+# Ubuntu / Linux:
+chmod +x install.sh && ./install.sh
+```
+
+### Варіант 3 — через GitHub Gist (тільки скрипт)
+```bash
+# Завантажити тільки QR_Generator.py з Gist
+curl -sL https://gist.githubusercontent.com/alex94aiss-tech/fa1c010144389eba70b38d4bd849e6b3/raw/QR_Generator.py -o QR_Generator.py
+
+# Встановити залежності вручну
+pip install "qrcode[pil]"
+
+# Запуск
+python QR_Generator.py --url https://stasys.com.ua --print --paper-size medium
+```
+
+> Gist містить тільки основний скрипт (`QR_Generator.py`). Встановники `install.bat`/`install.sh`, DEV-нотатки, README і історія — в репозиторії: https://github.com/alex94aiss-tech/qr-generator
+
 ## Використання
 
 ### Базове
