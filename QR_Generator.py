@@ -86,11 +86,10 @@ def main():
   %(prog)s --url https://example.com --error-correction H --box-size 15
         """
     )
-    parser.add_argument("url", nargs="?", help="URL для QR-коду (або використовуйте --url)")
-    parser.add_argument("--url", "-u", help="URL для QR-коду")
+    parser.add_argument("--url", "-u", help="URL для QR-коду (обов'язково або вводяться вручну)", required=False)
     parser.add_argument("--output", "-o", help="Шлях для збереження PNG файлу")
     parser.add_argument("--error-correction", "-e", choices=["L", "M", "Q", "H"],
-                        default="M", help="Рівень корекції помилок (L=7% M=15% Q=25% H=30%)")
+                        default="M", help="Рівень корекції: L(7pct) M(15pct) Q(25pct) H(30pct)")
     parser.add_argument("--box-size", "-b", type=int, default=10,
                         help="Розмір одного боксу QR-коду")
     parser.add_argument("--border", "-r", type=int, default=4,
@@ -104,9 +103,7 @@ def main():
 
     # URL — або з аргументу, або з --url, або запитуємо ввід
     url = args.url
-    if not url and args.url is None:
-        if args.url is None and not args.url and not args.url:
-            pass
+    if not url:
         print("Введіть URL для генерації QR-коду:")
         url = input("> ").strip()
 
