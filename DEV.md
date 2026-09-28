@@ -11,6 +11,7 @@ qr-generator/
 ├── QR_Generator.py     # Головний скрипт (CLI)
 ├── README.md           # Користувацька документація (публічна)
 ├── LICENSE             # MIT
+├── DEV.md              # Цей файл — внутрішня документація
 └── .git/               # Git-репозиторій
 ```
 
@@ -21,7 +22,7 @@ qr-generator/
 | Пакет | Призначення | Встановлення |
 |-------|-------------|--------------|
 | `qrcode` | Генерація QR-кодів | `pip install qrcode[pil]` |
-| `Pillow` (PIL) | Робота з PNG-зображеннями (посилається qrcode) | автоматично з `qrcode[pil]` |
+| `Pillow` (PIL) | Робота з PNG-зображеннями + drawing тексту | автоматично з `qrcode[pil]` |
 
 **Дві версії Python:**
 - Системний `python` (3.14.7, шлях: `C:\Users\Admin\AppData\Local\hermes\tools\python-3.14.7+…\python.exe`) — **основний**, треба встановлювати пакети сюди.
@@ -35,21 +36,33 @@ qr-generator/
 
 ```
 main()
-  ├─ argparse — парсинг CLI-аргументів (--url, --output, --error-correction, ...)
+  ├─ argparse — парсинг CLI-аргументів (--url, --paper-size, --caption, ...)
   ├─ input() — запит URL вручну, якщо не вказано в аргументах
   └─ generate_qr()
+       ├─ Визначення розміру паперу (get_paper_config)
+       ├─ Обчислення box_size: mm_to_px(qr_side_mm) // (safe_version + border*2)
        ├─ Створення QRCode (версія auto, рівень корекції, box_size, border)
        ├─ Додавання даних (URL)
-       ├─ make_image(fill_color="black", back_color="white")
+       ├─ make_image(fill_color="black", back_color="white") → "1" (1-bit)
+       ├─ Конвертація в RGB: img.convert("RGB")
+       ├─ add_caption_to_image()  ← текст URL зверху
+       │     ├─ Canvas RGB (ширина img.w, висота img.h + caption_height)
+       │     ├─ Paste QR-коду вниз
+       │     ├─ Truetype шрифт (arial → DejaVu → default)
+       │     └─ draw.text() — текст
        ├─ save(path) — PNG
-       └─ print_ascii(tty=True) — ASCII в термінал
+       └─ print_ascii() — ASCII в термінал (окремий QR без caption)
 ```
 
-**Ключові параметри QRCode:**
-- `version=None` — автоматичний вибір розміру (1-40)
-- `error_correction` — `ERROR_CORRECT_L` (7%), `M` (15%, типово), `Q` (25%), `H` (30%)
-- `box_size` — розмір одного модуля (пікселі)
-- `border` — кордон (кількість модулів)
+**Рівні паперу (PAPER_SIZES):**
+| Ключ | Папір (мм) | QR-сторона (мм) |
+|------|------------|------------------|
+| small | 80×80 | 50 |
+| medium | 100×100 | 70 | ← типово |
+| large | 150×150 | 110 |
+| a4 | 210×210 | 160 |
+
+Мінімальний QR-код — 20×20 мм (безпека пристрою).
 
 ---
 
@@ -60,10 +73,18 @@ main()
 | `--url`, `-u` | str | (ввід) | URL для QR-коду |
 | `--output`, `-o` | str | `qr_<safe>.png` | Шлях до PNG |
 | `--error-correction`, `-e` | L/M/Q/H | M | Рівень корекції |
-| `--box-size`, `-b` | int | 10 | Розмір боксу |
-| `--border`, `-r` | int | 4 | Кордон |
+| `--box-size`, `-b` | int | None (авто) | Розмір боксу |
+| `--border`, `-r` | int | 4 | Кордон (модулі) |
+| `--paper-size` | small/medium/large/a4/custom | **medium** | Розмір паперу |
+| `--custom-mm` | float | None | Сторона паперу в мм (custom) |
+| `--no-caption` | flag | False | Виключити надпис |
+| `--caption` | flag | True | Додати надпис (за замовчуванням) |
+| `--caption-text` | str | URL | Текст надпису |
+| `--caption-align` | left/center/right | center | Вирівнювання |
+| `--caption-color` | str | black | Колір тексту |
+| `--font-size` | int | 28 | Розмір шрифту надпису |
 | `--no-ascii` | flag | False | Виключити ASCII |
-| `--print`, `-p` | flag | False | Повідомлення про друк |
+| `--print`, `-p` | flag | False | Повідомлення для друку |
 
 ---
 
@@ -109,6 +130,21 @@ git push origin main
 - `https://example.com`
 - `https://github.com/alex94aiss-tech/qr-generator`
 
+**Тестові сценарії:**
+```bash
+# Типовий (100мм + caption)
+python QR_Generator.py --url https://stasys.com.ua --output test.png --paper-size medium --print --caption
+
+# Без надпису
+python QR_Generator.py --url https://example.com --output qr_no_caption.png --no-caption
+
+# Кастомний розмір
+python QR_Generator.py --url https://example.com --paper-size custom --custom-mm 120 --print
+
+# Ручний текст надпису
+python QR_Generator.py --url https://stasys.com.ua --caption-text "СТАСИС — стабільні системи" --output stasys_qr.png
+```
+
 ---
 
 ## 7. Примітки по Windows
@@ -116,7 +152,8 @@ git push origin main
 - **CRLF**: Git може конвертувати LF→CRLF. Не критично для Python.
 - **Папка скрипта**: `C:\Users\Admin\qr-generator\` (або будь-де, де `python QR_Generator.py`).
 - **Шлях до системного Python**: `C:\Users\Admin\AppData\Local\hermes\tools\python-3.14.7+202****0901-win32-x64\python.exe`
-- **Друк PNG**: через стандартний переглядач зображень → Print. Скрипт лише повідомляє про це флагом `--print`.
+- **Шрифти для caption**: спочатку намагається `arial.ttf`, потім `DejaVuSans.ttf`, потім дефолтний. Windows: arial зазвичай є.
+- **Друк PNG**: через стандартний переглядач зображень → Print. Скрипт лише повідомляє розмір паперу флагом `--print`.
 
 ---
 
