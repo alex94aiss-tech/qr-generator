@@ -12,6 +12,8 @@ qr-generator/
 ├── README.md           # Користувацька документація (публічна)
 ├── LICENSE             # MIT
 ├── DEV.md              # Цей файл — внутрішня документація
+├── install.bat         # Встановник для Windows (подвійний клік або cmd)
+├── install.sh          # Встановник для Linux/Ubuntu (bash)
 └── .git/               # Git-репозиторій
 ```
 
@@ -154,6 +156,7 @@ python QR_Generator.py --url https://stasys.com.ua --caption-text "СТАСИС 
 - **Шлях до системного Python**: `C:\Users\Admin\AppData\Local\hermes\tools\python-3.14.7+202****0901-win32-x64\python.exe`
 - **Шрифти для caption**: спочатку намагається `arial.ttf`, потім `DejaVuSans.ttf`, потім дефолтний. Windows: arial зазвичай є.
 - **Друк PNG**: через стандартний переглядач зображень → Print. Скрипт лише повідомляє розмір паперу флагом `--print`.
+- **install.bat**: запускається подвійним кліком або з cmd. Вимагає Python в PATH. Використовує UTF-8 (chcp 65001).
 
 ---
 

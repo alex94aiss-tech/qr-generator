@@ -4,9 +4,43 @@
 
 ## Встановлення
 
-```bash
-pip install qrcode[pil]
+### Автоматично (рекомендовано)
+
+#### Windows
+Запустіть `install.bat` подвійним кліком або з командного рядка:
+```bat
+install.bat
 ```
+
+#### Ubuntu / Linux
+Запустіть `install.sh`:
+```bash
+chmod +x install.sh
+./install.sh
+```
+
+### Вручну
+
+#### Вимоги
+- Python 3.8+
+- pip (менеджер пакетів Python)
+
+#### Windows
+```bat
+python -m pip install "qrcode[pil]"
+```
+
+#### Ubuntu / Linux
+```bash
+sudo apt update
+sudo apt install python3 python3-pip python3-venv -y
+python3 -m pip install --user "qrcode[pil]"
+```
+
+> **Примітка:** На Ubuntu може знадобитися `python3-tk` для деяких функцій Pillow:
+> ```bash
+> sudo apt install python3-tk -y
+> ```
 
 ## Використання
 
@@ -24,11 +58,27 @@ python QR_Generator.py https://example.com
 python QR_Generator.py --url https://example.com --output my_qr.png
 ```
 
-### Друк
+### Друк (папір 100×100 мм)
 
 ```bash
-python QR_Generator.py --url https://example.com --print
+python QR_Generator.py --url https://example.com --print --paper-size medium
 ```
+
+За замовчуванням `--paper-size medium` дає QR-код ≈70×70 мм на папері 100×100 мм.
+З надписом URL зверху (можна змінити через `--caption-text` та `--caption-align`).
+
+### Нові опції (розмір паперу + надпис)
+
+| Опція | Опис | Типово |
+|-------|------|--------|
+| `--paper-size` | Розмір паперу: **small**(80mm) **medium**(100mm) **large**(150mm) **a4**(210mm) **custom** | medium |
+| `--custom-mm` | Сторона квадратного паперу в мм (для custom) | — |
+| `--caption` | Додати надпис (за замовчуванням УВІМК) | True |
+| `--no-caption` | Без надпису | — |
+| `--caption-text` | Текст надпису (за замовчуванням — URL) | URL |
+| `--caption-align` | Вирівнювання: **left** / **center** / **right** | center |
+| `--caption-color` | Колір тексту | black |
+| `--font-size` | Розмір шрифту надпису (пункти) | 28 |
 
 ### Повна довідка
 
