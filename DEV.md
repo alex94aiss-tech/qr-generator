@@ -167,6 +167,15 @@ python QR_Generator.py --url https://stasys.com.ua --caption-text "СТАСИС 
 - **Віджет**: gh auth status → логін `alex94aiss-tech`, токен у keyring, scope: `repo`, `admin:org`, `gist`, `workflow` тощо.
 - **Бранча**: `main`
 
+## 9. GitHub Gist (швидкий доступ до скрипта)
+
+- **URL**: https://gist.github.com/alex94aiss-tech/fa1c010144389eba70b38d4bd849e6b3
+- **Що в Gist**: тільки `QR_Generator.py` — основний скрипт
+- **Зручно**: швидко забрати оновлений скрипт без клонування всього репо
+- **Не зручно**: нема install.bat/install.sh, DEV.md, README — все тільки в репо
+
+> Гist і репо існують одночасно. Gist — для швидкого доступу до скрипта, репо — для повної документації, встановників і історії розробки.
+
 ---
 
 *Останнє оновлення цього файлу: 2026-09-28*
