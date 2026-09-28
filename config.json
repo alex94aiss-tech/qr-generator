@@ -1,0 +1,41 @@
+{
+  "comment": "Конфігурація за замовчуванням для QR Generator — налаштування для СТАСИС",
+  "defaults": {
+    "url": "https://stasys.com.ua",
+    "caption": "СТАСИС — ПрАТ Стабільні системи",
+    "paper_size": "medium",
+    "paper_mm": 100,
+    "error_correction": "M",
+    "box_size": null,
+    "border": 4,
+    "font_size": 28,
+    "caption_align": "center",
+    "caption_color": "black",
+    "no_ascii": false,
+    "print": false
+  },
+  "types": {
+    "url": {
+      "caption": "СТАСИС — ПрАТ Стабільні системи",
+      "url": "https://stasys.com.ua"
+    },
+    "tel": {
+      "caption": "СТАСИС — Контактний телефон",
+      "phone": "+380502933815"
+    },
+    "mailto": {
+      "caption": "СТАСИС — Email",
+      "email": "stasys94@ukr.net"
+    },
+    "wifi": {
+      "caption": "СТАСИС — Wi-Fi мережа",
+      "wifi_ssid": "STSIS",
+      "wifi_pass": "",
+      "wifi_sec": "WPA"
+    },
+    "text": {
+      "caption": "СТАСИС — QR-код",
+      "text": ""
+    }
+  }
+}

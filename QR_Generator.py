@@ -2,21 +2,23 @@
 """
 QR Code Generator — генерує QR-код з URL/телефоном/email/Wi-Fi/текстом,
 виводить у термінал (ASCII) і зберігає як PNG файл із заголовком. Підтримує друк.
+Підтримує конфігураційний файл config.json для типових налаштувань.
 
 Інсталяція:
     pip install qrcode[pil] Pillow
 
 Використання:
-    python QR_Generator.py https://example.com
-    python QR_Generator.py --url https://example.com --output my_qr.png
-    python QR_Generator.py --phone +380671234567 --print --paper-size medium
+    python QR_Generator.py --url https://example.com
+    python QR_Generator.py --phone +380****4567 --print --paper-size medium
     python QR_Generator.py --email stasys94@ukr.net --print
     python QR_Generator.py --wifi-ssid STSIS --wifi-pass прихильник --wifi-sec WPA --print
     python QR_Generator.py --text "Привіт, світ!" --print
     python QR_Generator.py --url https://example.com --paper-size 100 --no-caption
+    python QR_Generator.py --config my_config.json --type url --print
 """
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -47,6 +49,35 @@ def get_paper_config(paper_size: str, custom_mm: float = None) -> tuple[int, int
         qr_side = max(int(custom_mm * 0.7), 20)
         return (int(custom_mm), qr_side)
     return PAPER_SIZES["medium"]
+
+
+def load_config(config_path: str = None, no_config: bool = False) -> dict:
+    """
+    Завантажує конфігурацію з config.json.
+
+    Args:
+        config_path: шлях до файлу конфігу (якщо None — config.json в поточній папці).
+        no_config: якщо True — ігнорувати конфіг і повернути порожній dict.
+
+    Returns:
+        dict з налаштуваннями (за замовчуванням порожній, якщо конфіг не знайдено).
+    """
+    if no_config:
+        return {}
+
+    path = config_path or "config.json"
+    config_file = Path(path)
+
+    if not config_file.is_file():
+        return {}
+
+    try:
+        with open(config_file, "r", encoding="utf-8") as f:
+            config = json.load(f)
+        return config
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"[WARNING] Помилка завантаження конфігу {path}: {e}")
+        return {}
 
 
 def add_caption_to_image(img: Image.Image, caption: str,
@@ -219,24 +250,31 @@ def generate_qr(data: str, qr_type: str = "url", output_path: str = None,
 def main():
     parser = argparse.ArgumentParser(
         description="Генератор QR-кодів: URL, телефон, email, Wi-Fi, текст. "
-                    "Виводить ASCII у термінал і зберігає PNG із заголовком.",
+                    "Виводить ASCII у термінал і зберігає PNG із заголовком. "
+                    "Підтримує config.json для типових налаштувань.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Типи QR-кодів:
   --type url      — URL (за замовчуванням)
-  --type tel      — Телефон (--phone +380671234567)
+  --type tel      — Телефон (--phone +380****4567)
   --type mailto   — Email (--email stasys94@ukr.net)
   --type wifi     — Wi-Fi (--wifi-ssid STSIS --wifi-pass пароль)
   --type text     — Вільний текст (--text "Привіт")
 
+Конфігурація:
+  --config path   — Використати файл конфігу (замовчування: config.json)
+  --no-config     — Ігнорувати конфігураційний файл
+
 Приклади:
   %(prog)s --url https://stasys.com.ua
-  %(prog)s --type tel --phone +380671234567 --print
+  %(prog)s --type tel --phone +380****4567 --print
   %(prog)s --type mailto --email stasys94@ukr.net --print
   %(prog)s --type wifi --wifi-ssid STSIS --wifi-pass прихильник --print
   %(prog)s --type text --text "Привіт, світ!" --print
   %(prog)s --url https://example.com --paper-size medium --caption
   %(prog)s --url https://example.com --output qr.png --no-caption
+  %(prog)s --config my_config.json --type url --print
+  %(prog)s --no-config --type tel --phone +380****4567
         """
     )
     parser.add_argument("--type", "-t", default="url",
@@ -245,7 +283,7 @@ def main():
     parser.add_argument("--url", "-u", required=False,
                         help="URL для QR-коду (тип url)")
     parser.add_argument("--phone", "-p", required=False,
-                        help="Номер телефону (тип tel, наприклад +380671234567)")
+                        help="Номер телефону (тип tel, наприклад +380****4567)")
     parser.add_argument("--email", "-e", required=False,
                         help="Email (тип mailto, наприклад stasys94@ukr.net)")
     parser.add_argument("--wifi-ssid", required=False,
@@ -258,44 +296,60 @@ def main():
                         help="Вільний текст (тип text)")
     parser.add_argument("--output", "-o", default=None,
                         help="Шлях для збереження PNG файлу")
-    parser.add_argument("--error-correction", default="M",
+    parser.add_argument("--error-correction", default=None,
                         choices=["L", "M", "Q", "H"],
                         help="Рівень корекції: L(7pct) M(15pct) Q(25pct) H(30pct)")
     parser.add_argument("--box-size", "-b", type=int, default=None,
                         help="Розмір одного боксу QR-коду (авто, якщо не вказано)")
-    parser.add_argument("--border", "-r", type=int, default=4,
+    parser.add_argument("--border", "-r", type=int, default=None,
                         help="Розмір кордону (кількість модулів)")
-    parser.add_argument("--paper-size", default="medium",
+    parser.add_argument("--paper-size", default=None,
                         choices=["small", "medium", "large", "a4", "custom"],
                         help="Розмір паперу: small(80mm) medium(100mm) large(150mm) a4(210mm)")
     parser.add_argument("--custom-mm", type=float, default=None,
                         help="Сторона квадратного паперу в мм (для --paper-size custom)")
     parser.add_argument("--no-caption", action="store_true", default=False,
                         help="Не додавати текстовий надпис")
-    parser.add_argument("--caption", action="store_true", default=True,
-                        help="Додати надпис (за замовчуванням)")
+    parser.add_argument("--caption", action="store_true", default=False,
+                        help="Додати надпис (за замовчуванням — так, якщо не вказано --no-caption)")
     parser.add_argument("--caption-text", default=None,
                         help="Текст надпису (за замовчуванням — дані)")
-    parser.add_argument("--caption-align", default="center",
+    parser.add_argument("--caption-align", default=None,
                         choices=["left", "center", "right"],
                         help="Вирівнювання надпису")
-    parser.add_argument("--caption-color", default="black",
+    parser.add_argument("--caption-color", default=None,
                         help="Колір тексту надпису")
-    parser.add_argument("--font-size", type=int, default=28,
+    parser.add_argument("--font-size", type=int, default=None,
                         help="Розмір шрифту надпису")
     parser.add_argument("--no-ascii", action="store_true",
                         help="Не виводити ASCII в термінал")
-    parser.add_argument("--print", "-p2", action="store_true",
+    parser.add_argument("--print", action="store_true",
                         help="Повідомлення для друку")
+    parser.add_argument("--config", default=None,
+                        help="Шлях до файлу конфігурації (замовчування: config.json)")
+    parser.add_argument("--no-config", action="store_true",
+                        help="Ігнорувати конфігураційний файл")
 
     args = parser.parse_args()
 
-    # ── Дані ────────────────────────────────────────────────────────────────
+    # ── Завантаження конфігу ────────────────────────────────────────────────
+    config = load_config(config_path=args.config, no_config=args.no_config)
+    default_cfg = config.get("defaults", {})
+    types_cfg = config.get("types", {})
+
     qr_type = args.type
+    type_cfg = types_cfg.get(qr_type, {})
+
+    # ── Дані ────────────────────────────────────────────────────────────────
     data = None
 
+    # Функція допомоги: беремо value з args або з конфіга, якщо args is None
+    def cfg_or_args(arg_value, config_value):
+        """Повертає arg_value якщо він not None, інакше config_value."""
+        return arg_value if arg_value is not None else config_value
+
     if qr_type == "url":
-        url = args.url
+        url = cfg_or_args(args.url, type_cfg.get("url") or default_cfg.get("url"))
         if not url:
             print("Введіть URL для генерації QR-коду:")
             try:
@@ -311,9 +365,9 @@ def main():
         data = build_data("url", url=url)
 
     elif qr_type == "tel":
-        phone = args.phone
+        phone = cfg_or_args(args.phone, type_cfg.get("phone"))
         if not phone:
-            print("Введіть номер телефону (наприклад +380671234567):")
+            print("Введіть номер телефону (наприклад +380****4567):")
             try:
                 phone = input("> ").strip()
             except EOFError:
@@ -327,15 +381,15 @@ def main():
         data = build_data("tel", phone=phone)
 
     elif qr_type == "mailto":
-        email = args.email
+        email = cfg_or_args(args.email, type_cfg.get("email") or default_cfg.get("url"))
         if not email:
             print("Введіть email (наприклад stasys94@ukr.net):")
             try:
                 email = input("> ").strip()
             except EOFError:
                 print("Помилка: email не вказано.")
-            parser.print_help()
-            sys.exit(1)
+                parser.print_help()
+                sys.exit(1)
         if not email:
             print("Помилка: email не вказано.")
             parser.print_help()
@@ -343,7 +397,7 @@ def main():
         data = build_data("mailto", email=email)
 
     elif qr_type == "wifi":
-        wifi_ssid = args.wifi_ssid
+        wifi_ssid = cfg_or_args(args.wifi_ssid, type_cfg.get("wifi_ssid"))
         if not wifi_ssid:
             print("Введіть SSID Wi-Fi мережі:")
             try:
@@ -356,18 +410,18 @@ def main():
             print("Помилка: SSID не вказано.")
             parser.print_help()
             sys.exit(1)
-        wifi_pass = args.wifi_pass
+        wifi_pass = cfg_or_args(args.wifi_pass, type_cfg.get("wifi_pass"))
+        wifi_sec = cfg_or_args(args.wifi_sec, type_cfg.get("wifi_sec", "WPA")) or "WPA"
         if not wifi_pass:
             print("Введіть пароль Wi-Fi (або залиште порожнім для open):")
             try:
                 wifi_pass = input("> ").strip()
             except EOFError:
                 wifi_pass = ""
-        wifi_sec = args.wifi_sec or "WPA"
         data = build_data("wifi", wifi_ssid=wifi_ssid, wifi_pass=wifi_pass, wifi_sec=wifi_sec)
 
     elif qr_type == "text":
-        text = args.text
+        text = cfg_or_args(args.text, type_cfg.get("text"))
         if not text:
             print("Введіть текст для QR-коду:")
             try:
@@ -382,27 +436,56 @@ def main():
             sys.exit(1)
         data = build_data("text", text=text)
 
+    # ── Параметри (з конфігу) ────────────────────────────────────────────────
+    paper_size = cfg_or_args(args.paper_size, default_cfg.get("paper_size", "medium"))
+    custom_mm = args.custom_mm if args.custom_mm is not None else default_cfg.get("paper_mm")
+    error_correction = cfg_or_args(args.error_correction, default_cfg.get("error_correction", "M"))
+    box_size = args.box_size if args.box_size is not None else default_cfg.get("box_size")
+    border = args.border if args.border is not None else default_cfg.get("border", 4)
+    font_size = args.font_size if args.font_size is not None else default_cfg.get("font_size", 28)
+    caption_align = cfg_or_args(args.caption_align, default_cfg.get("caption_align", "center"))
+    caption_color = cfg_or_args(args.caption_color, default_cfg.get("caption_color", "black"))
+
+    # Caption text: спочатку args, потім type-specific, потім defaults
+    caption_text = args.caption_text
+    if not caption_text:
+        caption_text = type_cfg.get("caption") or default_cfg.get("caption")
+
+    # Caption enabled: --no-caption → False, --caption → True, инакше конфіг
+    if args.no_caption:
+        caption_enabled = False
+    elif args.caption:
+        caption_enabled = True
+    else:
+        caption_enabled = default_cfg.get("caption", True)
+
+    # Boolean flags
+    ascii_enabled = not args.no_ascii if args.no_ascii else not default_cfg.get("no_ascii", False)
+    print_enabled = args.print if args.print else default_cfg.get("print", False)
+
     # ── Вивід інформації ──────────────────────────────────────────────────────
-    paper_mm, _ = get_paper_config(args.paper_size, args.custom_mm)
+    paper_mm, _ = get_paper_config(paper_size, custom_mm)
     print(f"\n[→] Генерую QR-код ({qr_type})")
     print(f"    Папір: {paper_mm}×{paper_mm} мм")
+    if config:
+        print(f"    Конфіг: {args.config or 'config.json'}")
 
     generate_qr(
         data=data,
         qr_type=qr_type,
         output_path=args.output,
-        ascii=not args.no_ascii,
-        print_=args.print,
-        error_correction=args.error_correction,
-        box_size=args.box_size,
-        border=args.border,
-        paper_size=args.paper_size,
-        custom_paper_mm=args.custom_mm,
-        caption=not args.no_caption,
-        caption_text=args.caption_text,
-        font_size=args.font_size,
-        caption_align=args.caption_align,
-        caption_color=args.caption_color,
+        ascii=ascii_enabled,
+        print_=print_enabled,
+        error_correction=error_correction,
+        box_size=box_size,
+        border=border,
+        paper_size=paper_size,
+        custom_paper_mm=custom_mm,
+        caption=caption_enabled,
+        caption_text=caption_text,
+        font_size=font_size,
+        caption_align=caption_align,
+        caption_color=caption_color,
     )
 
     print("[✓] Готово!")
