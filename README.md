@@ -42,7 +42,7 @@ python3 -m pip install --user "qrcode[pil]"
 > sudo apt install python3-tk -y
 > ```
 
-## Встановлення з GitHub
+### Встановлення з GitHub
 
 ### Варіант 1 — однією командою (рекомендовано)
 ```bash
@@ -106,6 +106,18 @@ python QR_Generator.py --no-config --type tel --phone +380****1234
 ```bash
 # Конфіг каже URL: https://stasys.com.ua, але ми перезаписуємо
 python QR_Generator.py --url https://example.com --type url --print
+```
+
+## Оновлення скрипта
+
+Скрипт підтримує самооновлення з GitHub Gist:
+
+```bash
+# Оновлення з підтвердженням
+python QR_Generator.py --update
+
+# Оновлення без запиту (з розширенням резервної копії .py.bak)
+python QR_Generator.py --update-force
 ```
 
 ### Структура config.json
@@ -218,7 +230,14 @@ python QR_Generator.py --help
 | `--box-size`, `-b` | Розмір боксу | 10 |
 | `--border`, `-r` | Розмір кордону | 4 |
 | `--no-ascii` | Не виводити ASCII в термінал | False |
-| `--print`, `-p` | Повідомлення для друку | False |
+|| `--print`, `-p` | Повідомлення для друку | False |
+|| `--batch` | Файл з URL-ами (по одному в рядку) для масової генерації | - |
+|| `--output-dir` | Папка для збереження QR-кодів | поточна |
+|| `--name-as-filename` | Використовувати назву з файлу як ім'я файлу PNG | False |
+|| `--config` | Шлях до config.json | config.json |
+|| `--no-config` | Ігнорувати config.json | False |
+|| `--update` | Оновити скрипт з GitHub Gist (з підтвердженням) | - |
+|| `--update-force` | Оновити скрипт з GitHub Gist без запиту | - |
 
 ## Приклади
 ```bash
@@ -248,6 +267,9 @@ python QR_Generator.py --type text --text "Привіт, світ!" --print
 
 # Ручний текст надпису
 python QR_Generator.py --url https://stasys.com.ua --caption-text "СТАСИС — стабільні системи" --output stasys_qr.png
+
+# Оновлення скрипта з Gist
+python QR_Generator.py --update
 ```
 
 ## Вивід
