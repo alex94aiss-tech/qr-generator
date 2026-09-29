@@ -30,6 +30,7 @@ QR Code Generator — генерує QR-код з URL, виводить у те�
 
 import argparse
 
+import os
 import sys
 
 from pathlib import Path
@@ -332,6 +333,40 @@ def generate_qr(url: str, output_path: str = None, ascii: bool = True,
 
 
 
+def batch_generate(input_file: str, output_dir: str = ".",
+                   name_as_filename: bool = False,
+                   error_correction: str = "M", box_size: int = None,
+                   border: int = 4, paper_size: str = "medium",
+                   custom_mm: float = None,
+                   caption: bool = True, no_caption: bool = False,
+                   caption_text: str = None, font_size: int = 28,
+                   caption_align: str = "center", caption_color: str = "black") -> list:
+    """Генерує QR-коди для кожного рядка у файлі."""
+    results = []
+
+    with open(input_file, "r", encoding="utf-8") as f:
+        lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+
+    for i, line in enumerate(lines):
+        safe_name = re.sub(r'[^\w\-]', '_', line[:40]) or f"qr_{i}"
+        out_path = Path(output_dir) / (safe_name + ".png")
+
+        print(f"[{i+1}/{len(lines)}] Генерація: {line[:60]}...")
+
+        generate_qr(line, str(out_path),
+                    error_correction=error_correction, box_size=box_size,
+                    border=border, paper_size=paper_size, custom_mm=custom_mm,
+                    caption=caption, no_caption=no_caption,
+                    caption_text=caption_text, font_size=font_size,
+                    caption_align=caption_align, caption_color=caption_color,
+                    no_ascii=True)
+
+        results.append(str(out_path))
+
+    return results
+
+
+
 def main():
 
     parser = argparse.ArgumentParser(
@@ -424,9 +459,55 @@ def main():
 
                         help="Повідомлення для друку")
 
+    parser.add_argument("--batch", default=None,
+
+                        help="Файл з URL-ами (по одному в рядку) для масової генерації")
+
+    parser.add_argument("--output-dir", default=None,
+
+                        help="Папка для збереження QR-кодів (за замовчуванням — поточна)")
+
+    parser.add_argument("--name-as-filename", action="store_true", default=False,
+
+                        help="Використовувати назву з файлу як ім'я файлу PNG")
+
 
 
     args = parser.parse_args()
+
+
+
+    # ── Batch генерація ──────────────────────────────────────────────────────
+
+    if args.batch:
+
+        if not os.path.exists(args.batch):
+
+            print(f"Помилка: файл {args.batch} не знайдено.")
+
+            sys.exit(1)
+
+        output_dir = args.output_dir or "."
+
+        os.makedirs(output_dir, exist_ok=True)
+
+        results = batch_generate(args.batch, output_dir, args.name_as_filename,
+
+                                 args.error_correction, args.box_size, args.border,
+
+                                 args.paper_size, args.custom_mm,
+
+                                 args.caption, args.no_caption, args.caption_text,
+
+                                 args.font_size, args.caption_align, args.caption_color)
+
+        print(f"\n[✓] Згенеровано {len(results)} QR-кодів у папці {output_dir}/")
+
+        for r in results:
+
+            print(f"  • {r}")
+
+        sys.exit(0)
 
 
 
